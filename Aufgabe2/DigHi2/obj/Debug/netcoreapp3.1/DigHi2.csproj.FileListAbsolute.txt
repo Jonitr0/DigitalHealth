@@ -1,0 +1,13 @@
+C:\Users\JonasTrappe\Documents\Uni\DigiH\Aufgabe2\DigHi2\DigHi2\bin\Debug\netcoreapp3.1\DigHi2.exe
+C:\Users\JonasTrappe\Documents\Uni\DigiH\Aufgabe2\DigHi2\DigHi2\bin\Debug\netcoreapp3.1\DigHi2.deps.json
+C:\Users\JonasTrappe\Documents\Uni\DigiH\Aufgabe2\DigHi2\DigHi2\bin\Debug\netcoreapp3.1\DigHi2.runtimeconfig.json
+C:\Users\JonasTrappe\Documents\Uni\DigiH\Aufgabe2\DigHi2\DigHi2\bin\Debug\netcoreapp3.1\DigHi2.runtimeconfig.dev.json
+C:\Users\JonasTrappe\Documents\Uni\DigiH\Aufgabe2\DigHi2\DigHi2\bin\Debug\netcoreapp3.1\DigHi2.dll
+C:\Users\JonasTrappe\Documents\Uni\DigiH\Aufgabe2\DigHi2\DigHi2\bin\Debug\netcoreapp3.1\DigHi2.pdb
+C:\Users\JonasTrappe\Documents\Uni\DigiH\Aufgabe2\DigHi2\DigHi2\obj\Debug\netcoreapp3.1\DigHi2.csprojAssemblyReference.cache
+C:\Users\JonasTrappe\Documents\Uni\DigiH\Aufgabe2\DigHi2\DigHi2\obj\Debug\netcoreapp3.1\DigHi2.AssemblyInfoInputs.cache
+C:\Users\JonasTrappe\Documents\Uni\DigiH\Aufgabe2\DigHi2\DigHi2\obj\Debug\netcoreapp3.1\DigHi2.AssemblyInfo.cs
+C:\Users\JonasTrappe\Documents\Uni\DigiH\Aufgabe2\DigHi2\DigHi2\obj\Debug\netcoreapp3.1\DigHi2.csproj.CoreCompileInputs.cache
+C:\Users\JonasTrappe\Documents\Uni\DigiH\Aufgabe2\DigHi2\DigHi2\obj\Debug\netcoreapp3.1\DigHi2.dll
+C:\Users\JonasTrappe\Documents\Uni\DigiH\Aufgabe2\DigHi2\DigHi2\obj\Debug\netcoreapp3.1\DigHi2.pdb
+C:\Users\JonasTrappe\Documents\Uni\DigiH\Aufgabe2\DigHi2\DigHi2\obj\Debug\netcoreapp3.1\DigHi2.genruntimeconfig.cache
