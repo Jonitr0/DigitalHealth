@@ -68,13 +68,13 @@ namespace DigHi2
         
         public Subject(string dirPath, int subIndex, int expIndex)
         {
-
+            _properties = new SubjectProperties(expIndex, subIndex);            
+            
             string[] dataSetFiles = Directory.GetFiles(dirPath, "*", SearchOption.TopDirectoryOnly);
+
             foreach(string file in dataSetFiles)
             {
-                string indexStr = file.Remove(0, file.LastIndexOf("\\") + 1);
-                indexStr = indexStr.Remove(indexStr.LastIndexOf("."));
-                int index = int.Parse(indexStr);
+                int index = CalculateIndex(file, expIndex);
 
                 //dirty way to prevent OutOfBoundsException again
                 while (_dataSets.Count < index)
@@ -82,6 +82,25 @@ namespace DigHi2
 
                 _dataSets[index-1]  = new DataSet(file, expIndex, index-1);
             }
+        }
+
+        private int CalculateIndex(string file, int expIndex)
+        {
+            int index = 0;
+
+            //experiment 1: just take the number from the string
+            if(expIndex == 1)
+            {
+                string indexStr = file.Remove(0, file.LastIndexOf("\\") + 1);
+                indexStr = indexStr.Remove(indexStr.LastIndexOf("."));
+                index = int.Parse(indexStr);
+            }
+            else
+            {
+
+            }
+
+            return index;
         }
     }
 
@@ -98,9 +117,9 @@ namespace DigHi2
         private static int[] ex1Height = { 175, 183, 183, 177, 172, 169, 179, 186, 174, 174, 176, 170, 174 };
         private static int[] ex1Weight= { 87, 85, 100, 70, 66, 83, 96, 63, 74, 79, 91, 78, 74 };
 
-        private static int[] ex2Age = { 19, 23, 23, 24, 27, 27, 30, 30, 33 };
-        private static int[] ex2Height = { 175, 183, 183, 172, 179, 186, 174, 174, 170 };
-        private static int[] ex2Weight = { 87, 85, 100, 66, 96, 63, 74, 79, 78 };
+        private static int[] ex2Age = { 19, 23, 23, 24, 27, 27, 30, 30};
+        private static int[] ex2Height = { 175, 183, 183, 172, 179, 186, 174, 174};
+        private static int[] ex2Weight = { 87, 85, 100, 66, 96, 63, 74, 79};
 
         public SubjectProperties(int expIndex, int subIndex)
         {
@@ -114,9 +133,9 @@ namespace DigHi2
             //experiment 2
             else
             {
-                _age = ex1Age[subIndex];
-                _height = ex1Height[subIndex];
-                _weight = ex1Weight[subIndex];
+                _age = ex2Age[subIndex];
+                _height = ex2Height[subIndex];
+                _weight = ex2Weight[subIndex];
             }
         }
     }
@@ -127,6 +146,15 @@ namespace DigHi2
         DataSetProperties _properties;
         
         List<int[]> _data = new List<int[]>();
+        int _frameLength;
+
+        private void SetFrameLength(int expIndex)
+        {
+            if (expIndex == 1)
+                _frameLength = 2048;
+            else
+                _frameLength = 1728;
+        }
 
         public DataSet()
         {
@@ -136,13 +164,24 @@ namespace DigHi2
         public DataSet(string file, int expIndex, int dataIndex)
         {
             _properties = new DataSetProperties(expIndex, dataIndex);
+            SetFrameLength(expIndex);
 
             string[] lines = File.ReadAllLines(file);
+            //in experimant 2 only one frame per file
+            if(expIndex == 2)
+            {
+                while(lines.Length > 1)
+                {
+                    string last = " " + lines[lines.Length - 1];
+                    lines[0] += last;
+                    Array.Resize<string>(ref lines, lines.Length - 1);
+                }
+            }
 
             foreach(string line in lines)
             {
-                int[] frame = new int[2048];
-                for (int i=0; i<2048; ++i)
+                int[] frame = new int[_frameLength];
+                for (int i=0; i<_frameLength; ++i)
                 {
                     string numString = Regex.Match(line, @"\d+").Value;
                     if(numString.Length < 1)
