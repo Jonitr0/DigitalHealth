@@ -26,7 +26,7 @@ namespace DigHi2
 
             Console.WriteLine("reading input...");
             
-            _experiment1.ReadInput(dirPath + "experiment-i");
+            //_experiment1.ReadInput(dirPath + "experiment-i");
             _experiment2.ReadInput(dirPath + "experiment-ii");
 
             Console.WriteLine("reading input finished.");
@@ -60,19 +60,25 @@ namespace DigHi2
     {
         List<DataSet> _dataSets = new List<DataSet>();
         SubjectProperties _properties;
+        bool _isEmpty = false;
 
         public Subject()
         {
-
+            _isEmpty = true;
         }
         
         public Subject(string dirPath, int subIndex, int expIndex)
         {
-            _properties = new SubjectProperties(expIndex, subIndex);            
-            
-            string[] dataSetFiles = Directory.GetFiles(dirPath, "*", SearchOption.TopDirectoryOnly);
+            _properties = new SubjectProperties(expIndex, subIndex);
 
-            foreach(string file in dataSetFiles)
+            string[] dataSetFiles;
+            if (expIndex == 1)
+                dataSetFiles = Directory.GetFiles(dirPath, "*", SearchOption.TopDirectoryOnly);
+            else
+                dataSetFiles = Directory.GetFiles(dirPath, "*", SearchOption.AllDirectories);
+
+
+            foreach (string file in dataSetFiles)
             {
                 int index = CalculateIndex(file, expIndex);
 
@@ -95,9 +101,45 @@ namespace DigHi2
                 indexStr = indexStr.Remove(indexStr.LastIndexOf("."));
                 index = int.Parse(indexStr);
             }
+            //experiment 2: calculate offset from mmat type and letter
             else
             {
+                string indexStr = file.Remove(0, file.LastIndexOf("\\") + 1);
+                indexStr = Regex.Match(indexStr, @"\d+").Value;
+                indexStr.Trim();
+                index = int.Parse(indexStr);
 
+                //range 1-10
+                if (file.Contains("B"))
+                {
+                    
+                }
+                //range 11-13
+                else if (file.Contains("C"))
+                {
+                    index += 10;
+                }
+                //range 14-16
+                else if (file.Contains("D"))
+                {
+                    index += 13;
+                }
+                //range 17-22
+                else if (file.Contains("E"))
+                {
+                    index += 16;
+                }
+                //range 23-29
+                else if (file.Contains("F"))
+                {
+                    index += 22;
+                }
+
+                //increase for airmat
+                if(file.Contains("Air_Mat"))
+                {
+                    index += 29;
+                }
             }
 
             return index;
@@ -147,6 +189,7 @@ namespace DigHi2
         
         List<int[]> _data = new List<int[]>();
         int _frameLength;
+        bool _isEmpty = false;
 
         private void SetFrameLength(int expIndex)
         {
@@ -158,23 +201,28 @@ namespace DigHi2
 
         public DataSet()
         {
-
+            _isEmpty = true;
         }
 
         public DataSet(string file, int expIndex, int dataIndex)
         {
-            _properties = new DataSetProperties(expIndex, dataIndex);
             SetFrameLength(expIndex);
 
             string[] lines = File.ReadAllLines(file);
-            //in experimant 2 only one frame per file
-            if(expIndex == 2)
+            if(expIndex == 1)
             {
+                _properties = new DataSetProperties(dataIndex);
+            }
+            //in experimant 2 only one frame per file and use other props constructor
+            else
+            {
+                _properties = new DataSetProperties(file);
+                
                 while(lines.Length > 1)
                 {
                     string last = " " + lines[lines.Length - 1];
                     lines[0] += last;
-                    Array.Resize<string>(ref lines, lines.Length - 1);
+                    Array.Resize(ref lines, lines.Length - 1);
                 }
             }
 
@@ -204,7 +252,7 @@ namespace DigHi2
     {
         public Posture _posture;
         public int _bedInclination;
-        public int _bedRoll;
+        public int _bodyRoll;
 
         private static Posture[] _ex1posture = { Posture.Supine, Posture.Right, Posture.Left, Posture.Right, Posture.Right, Posture.Left, Posture.Left,
             Posture.Supine, Posture.Supine, Posture.Supine, Posture.Supine, Posture.Supine, Posture.RightFetus, Posture.LeftFetus, Posture.Supine,
@@ -212,19 +260,59 @@ namespace DigHi2
         private static int[] _ex1Inc = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 30, 45, 60 };
         private static int[] _ex1Roll = { 0, 0, 0, 30, 60, 30, 60, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 
-        public DataSetProperties(int experiment, int index)
+        //for exp 1
+        public DataSetProperties(int index)
         {
-            //experiment 1
-            if (experiment == 1)
-            {
-                _posture = _ex1posture[index];
-                _bedInclination = _ex1Inc[index];
-                _bedRoll = _ex1Roll[index];
-            }
-            //experiment 2
-            else
-            {
+            _posture = _ex1posture[index];
+            _bedInclination = _ex1Inc[index];
+            _bodyRoll = _ex1Roll[index];
+        }
 
+        //for exp 2
+        public DataSetProperties(string file)
+        {
+            if(file.Contains("B"))
+            {
+                _posture = Posture.Supine;
+                _bedInclination = 0;
+                _bodyRoll = 0;
+            }
+            else if(file.Contains("C"))
+            {
+                _posture = Posture.Right;
+                _bedInclination = 0;
+                _bodyRoll = 0;
+            }
+            else if(file.Contains("D"))
+            {
+                _posture = Posture.Left;
+                _bedInclination = 0;
+                _bodyRoll = 0;
+            }
+            else if(file.Contains("E"))
+            {
+                if (file.Contains("E1") || file.Contains("E2") || file.Contains("E5"))
+                    _posture = Posture.Right;
+                else
+                    _posture = Posture.Left;
+
+                if (file.Contains("E2") || file.Contains("E4"))
+                    _bodyRoll = 40;
+                else
+                    _bodyRoll = 20;
+
+                _bedInclination = 0;
+            }
+            else if(file.Contains("F"))
+            {
+                string indexStr = file.Remove(0, file.LastIndexOf("\\") + 1);
+                indexStr = Regex.Match(indexStr, @"\d+").Value;
+                indexStr.Trim();
+                int index = int.Parse(indexStr);
+                _bedInclination = (index - 1) * 10;
+
+                _posture = Posture.Supine;
+                _bodyRoll = 0;
             }
         }
     }

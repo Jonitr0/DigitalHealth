@@ -13,11 +13,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\JonasTrappe\\Documents\\Uni\\DigiH\\Aufgabe2\\DigHi2\\DigHi2\\DigHi2.csproj",
+      "projectUniqueName": "C:\\Users\\JonasTrappe\\Documents\\GitHub\\DigitalHealth\\Aufgabe2\\DigHi2\\DigHi2.csproj",
       "projectName": "DigHi2",
-      "projectPath": "C:\\Users\\JonasTrappe\\Documents\\Uni\\DigiH\\Aufgabe2\\DigHi2\\DigHi2\\DigHi2.csproj",
+      "projectPath": "C:\\Users\\JonasTrappe\\Documents\\GitHub\\DigitalHealth\\Aufgabe2\\DigHi2\\DigHi2.csproj",
       "packagesPath": "C:\\Users\\JonasTrappe\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\JonasTrappe\\Documents\\Uni\\DigiH\\Aufgabe2\\DigHi2\\DigHi2\\obj\\",
+      "outputPath": "C:\\Users\\JonasTrappe\\Documents\\GitHub\\DigitalHealth\\Aufgabe2\\DigHi2\\obj\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [
         "C:\\Users\\JonasTrappe\\AppData\\Roaming\\NuGet\\NuGet.Config",
