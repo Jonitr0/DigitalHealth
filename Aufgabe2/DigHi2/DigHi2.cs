@@ -13,7 +13,9 @@ namespace DigHi2
             //relative path to folder containing "experiment-i" "experiment-ii" subfolders 
             prog.ReadInput("..\\..\\..\\..\\");
 
-
+            prog.TaskC1();
+            prog.TaskC2();
+            prog.TaskC3();
         }
 
         Experiment _experiment1 = new Experiment();
@@ -26,10 +28,46 @@ namespace DigHi2
 
             Console.WriteLine("reading input...");
             
-            //_experiment1.ReadInput(dirPath + "experiment-i");
+            _experiment1.ReadInput(dirPath + "experiment-i");
             _experiment2.ReadInput(dirPath + "experiment-ii");
 
-            Console.WriteLine("reading input finished.");
+            Console.WriteLine("reading input finished.\n");
+        }
+
+        void TaskC1()
+        {
+            float exp1 = _experiment1.GetPressureOverValueForPosture(200, Posture.Supine);
+            float exp2 = _experiment2.GetPressureOverValueForPosture(200, Posture.Supine);
+
+            Console.WriteLine("Percentage of Messaurements over value 200 in supine position for experiment 1: " + Math.Round(exp1, 2) + "%");
+            Console.WriteLine("Percentage of Messaurements over value 100 in supine position for experiment 2: " + Math.Round(exp2, 2) + "%");
+            Console.WriteLine("");
+        }
+
+        void TaskC2()
+        {
+            float exp1 = _experiment1.GetPressureOverValueForPosture(200, Posture.Left) + _experiment2.GetPressureOverValueForPosture(200, Posture.Right) + 
+                _experiment1.GetPressureOverValueForPosture(200, Posture.LeftFetus) + _experiment2.GetPressureOverValueForPosture(200, Posture.RightFetus);
+            float exp2 = _experiment2.GetPressureOverValueForPosture(100, Posture.Left) + _experiment2.GetPressureOverValueForPosture(100, Posture.Right);
+
+
+            Console.WriteLine("Percentage of Messaurements over value 200 in left/right positions for experiment 1: " + Math.Round(exp1, 2) + "%");
+            Console.WriteLine("Percentage of Messaurements over value 100 in left/right positions for experiment 2: " + Math.Round(exp2, 2) + "%");
+            Console.WriteLine("");
+        }
+
+        void TaskC3()
+        {
+            float exp1inc0 = _experiment1.GetRatioOverValueForInc(0, 200);
+            float exp2inc0 = _experiment1.GetRatioOverValueForInc(0, 100);
+            float exp1inc60 = _experiment1.GetRatioOverValueForInc(60, 200);
+            float exp2inc60 = _experiment1.GetRatioOverValueForInc(60, 100);
+
+            Console.WriteLine("Ratio of top/bottom Messaurements over 200 at 0 degrees bed inclination for experiment 1: " + Math.Round(exp1inc0, 2));
+            Console.WriteLine("Ratio of top/bottom Messaurements over 100 at 0 degrees bed inclination for experiment 2: " + Math.Round(exp2inc0, 2));
+            Console.WriteLine("Ratio of top/bottom Messaurements over 200 at 60 degrees bed inclination for experiment 1: " + Math.Round(exp1inc60, 2));
+            Console.WriteLine("Ratio of top/bottom Messaurements over 100 at 60 degrees bed inclination for experiment 2: " + Math.Round(exp2inc60, 2));
+            Console.WriteLine("");
         }
     }
 
@@ -53,12 +91,33 @@ namespace DigHi2
                 _subjects[index - 1] = new Subject(subdir, index -1, _experimentIndex);
             }
         }
+
+        public float GetPressureOverValueForPosture(int value, Posture posture)
+        {
+            float total = 0;
+            foreach(Subject subject in _subjects)
+            {                
+                total += subject.GetPercentagesForPostures(posture, value);
+            }
+            return total /= (float)_subjects.Count;
+        }
+
+        public float GetRatioOverValueForInc(int inc, int value)
+        {
+            float total = 0;
+            foreach (Subject subject in _subjects)
+            {
+                total += subject.GetAverageTopBottomRatioForInc(inc, value);
+            }
+            return total /= (float)_subjects.Count;
+        }
+
     }
 
     //represents one experiment subject
     class Subject
     {
-        List<DataSet> _dataSets = new List<DataSet>();
+        public List<DataSet> _dataSets = new List<DataSet>();
         SubjectProperties _properties;
         bool _isEmpty = false;
 
@@ -144,6 +203,50 @@ namespace DigHi2
 
             return index;
         }
+
+        public float GetPercentagesForPostures(Posture posture, int value)
+        {
+            float total = 0;
+            int offset = 0;
+            
+            foreach(DataSet dataset in _dataSets)
+            {
+                if(dataset._isEmpty)
+                {
+                    offset++;
+                    continue;
+                }
+                
+                if (posture != dataset._properties._posture)
+                    continue;
+
+                total += dataset.GetInputOverValue(value);
+            }
+
+            return total /= (float)(_dataSets.Count - offset);
+        }
+
+        public float GetAverageTopBottomRatioForInc(int inc, int value)
+        {
+            float total = 0;
+            int offset = 0;
+
+            foreach (DataSet dataset in _dataSets)
+            {
+                if (dataset._isEmpty)
+                {
+                    offset++;
+                    continue;
+                }
+
+                if (inc != dataset._properties._bedInclination)
+                    continue;
+
+                total += dataset.GetRatioOverValue(value);
+            }
+
+            return total /= (float)(_dataSets.Count - offset);
+        }
     }
 
     public enum Posture { Supine, Left, Right, LeftFetus, RightFetus };
@@ -185,11 +288,11 @@ namespace DigHi2
     //represents one data set (one file of messurements)
     class DataSet
     {
-        DataSetProperties _properties;
+        public DataSetProperties _properties;
         
         List<int[]> _data = new List<int[]>();
         int _frameLength;
-        bool _isEmpty = false;
+        public bool _isEmpty = false;
 
         private void SetFrameLength(int expIndex)
         {
@@ -228,23 +331,74 @@ namespace DigHi2
 
             foreach(string line in lines)
             {
+                string editableLine = line;
                 int[] frame = new int[_frameLength];
                 for (int i=0; i<_frameLength; ++i)
                 {
-                    string numString = Regex.Match(line, @"\d+").Value;
+                    string numString = Regex.Match(editableLine, @"\d+").Value;
                     if(numString.Length < 1)
                     {
                         frame[i] = 0;
                     }
                     else
                     {
-                        line.Remove(0, numString.Length);
+                        editableLine = editableLine.Remove(0, numString.Length);
                         frame[i] = int.Parse(numString.Trim());
                     }
                 }
 
                 _data.Add(frame);
             }
+        }
+
+        public float GetInputOverValue(int value)
+        {
+            int total = 0;
+            foreach(int[] data in _data)
+            {             
+                for(int i=0; i < _frameLength; ++i)
+                {
+                    if (data[i] > value)
+                    {
+                        total++;
+                    }
+                }
+            }
+
+            return ((float)total * 100.0f) / (float)(_frameLength * _data.Count);
+        }
+
+        public float GetRatioOverValue(int value)
+        {
+            //Top Percentage
+            int total = 0;
+            foreach (int[] data in _data)
+            {
+                for (int i = 0; i < _frameLength / 2; ++i)
+                {
+                    if (data[i] > value)
+                    {
+                        total++;
+                    }
+                }
+            }
+            float topPercent =  ((float)total * 100.0f) / (float)(_frameLength/2 * _data.Count);
+
+            //Bottom Percentage
+            total = 0;
+            foreach (int[] data in _data)
+            {
+                for (int i = _frameLength / 2; i < _frameLength; ++i)
+                {
+                    if (data[i] > value)
+                    {
+                        total++;
+                    }
+                }
+            }
+            float bottomPercent = ((float)total * 100.0f) / (float)(_frameLength / 2 * _data.Count);
+
+            return topPercent / bottomPercent;
         }
     }
 
