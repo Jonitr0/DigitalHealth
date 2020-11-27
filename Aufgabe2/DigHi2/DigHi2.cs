@@ -13,6 +13,8 @@ namespace DigHi2
             //relative path to folder containing "experiment-i" "experiment-ii" subfolders 
             prog.ReadInput("..\\..\\..\\..\\");
 
+            prog.TaskB();
+            
             prog.TaskC1();
             prog.TaskC2();
             prog.TaskC3();
@@ -32,6 +34,12 @@ namespace DigHi2
             _experiment2.ReadInput(dirPath + "experiment-ii");
 
             Console.WriteLine("reading input finished.\n");
+        }
+
+        void TaskB()
+        {
+            Console.WriteLine("Frames taken in supine position: " + (int)(_experiment1.MessurementsInPosture(Posture.Supine) + _experiment2.MessurementsInPosture(Posture.Supine)));
+            Console.WriteLine("");
         }
 
         void TaskC1()
@@ -58,15 +66,30 @@ namespace DigHi2
 
         void TaskC3()
         {
-            float exp1inc0 = _experiment1.GetRatioOverValueForInc(0, 200);
-            float exp2inc0 = _experiment1.GetRatioOverValueForInc(0, 100);
-            float exp1inc60 = _experiment1.GetRatioOverValueForInc(60, 200);
-            float exp2inc60 = _experiment1.GetRatioOverValueForInc(60, 100);
+            List<Posture> supine = new List<Posture>();
+            supine.Add(Posture.Supine);
 
-            Console.WriteLine("Ratio of top/bottom Messaurements over 200 at 0 degrees bed inclination for experiment 1: " + Math.Round(exp1inc0, 2));
-            Console.WriteLine("Ratio of top/bottom Messaurements over 100 at 0 degrees bed inclination for experiment 2: " + Math.Round(exp2inc0, 2));
-            Console.WriteLine("Ratio of top/bottom Messaurements over 200 at 60 degrees bed inclination for experiment 1: " + Math.Round(exp1inc60, 2));
-            Console.WriteLine("Ratio of top/bottom Messaurements over 100 at 60 degrees bed inclination for experiment 2: " + Math.Round(exp2inc60, 2));
+            List<Posture> lr = new List<Posture>();
+            lr.Add(Posture.Left);
+            lr.Add(Posture.Right);
+            lr.Add(Posture.LeftFetus);
+            lr.Add(Posture.RightFetus);
+
+            float exp1inc0sup = _experiment1.GetRatioOverValueForInc(0, 200, supine);
+            float exp2inc0sup = _experiment2.GetRatioOverValueForInc(0, 100, supine);
+            float exp1inc0lr = _experiment1.GetRatioOverValueForInc(0, 200, lr);
+            float exp2inc0lr = _experiment2.GetRatioOverValueForInc(0, 100, lr);
+            float exp1inc60sup = _experiment1.GetRatioOverValueForInc(60, 200, supine);
+            float exp2inc60sup = _experiment2.GetRatioOverValueForInc(60, 100, supine);
+
+            Console.WriteLine("Ratio of top/bottom Messaurements over 200 at 0 degrees bed inclination in supine position for experiment 1: " + Math.Round(exp1inc0sup, 2));
+            Console.WriteLine("Ratio of top/bottom Messaurements over 100 at 0 degrees bed inclination in supine position for experiment 2: " + Math.Round(exp2inc0sup, 2));
+            Console.WriteLine("Ratio of top/bottom Messaurements over 200 at 0 degrees bed inclination in left/right positions for experiment 1: " + Math.Round(exp1inc0lr, 2));
+            Console.WriteLine("Ratio of top/bottom Messaurements over 100 at 0 degrees bed inclination in left/right positions for experiment 2: " + Math.Round(exp2inc0lr, 2));
+            Console.WriteLine("Ratio of top/bottom Messaurements over 200 at 60 degrees bed inclination in supine position for experiment 1: " + Math.Round(exp1inc60sup, 2));
+            Console.WriteLine("Ratio of top/bottom Messaurements over 100 at 60 degrees bed inclination in supine position for experiment 2: " + Math.Round(exp2inc60sup, 2));
+            Console.WriteLine("No Data of Messaurements over 200 at 60 degrees bed inclination in left/right positions for experiment 1.");
+            Console.WriteLine("No Data of top/bottom Messaurements over 100 at 60 degrees bed inclination in left/right positions for experiment 2.");
             Console.WriteLine("");
         }
     }
@@ -92,6 +115,16 @@ namespace DigHi2
             }
         }
 
+        public int MessurementsInPosture(Posture posture)
+        {
+            int total = 0;
+            foreach(Subject subject in _subjects)
+            {
+                total += subject.GetNumberOfFramesForPosture(posture);
+            }
+            return total;
+        }
+
         public float GetPressureOverValueForPosture(int value, Posture posture)
         {
             float total = 0;
@@ -102,12 +135,12 @@ namespace DigHi2
             return total /= (float)_subjects.Count;
         }
 
-        public float GetRatioOverValueForInc(int inc, int value)
+        public float GetRatioOverValueForInc(int inc, int value, List<Posture> postures)
         {
             float total = 0;
             foreach (Subject subject in _subjects)
             {
-                total += subject.GetAverageTopBottomRatioForInc(inc, value);
+                total += subject.GetAverageTopBottomRatioForInc(inc, value, postures);
             }
             return total /= (float)_subjects.Count;
         }
@@ -204,29 +237,51 @@ namespace DigHi2
             return index;
         }
 
+        public int GetNumberOfFramesForPosture(Posture posture)
+        {
+            int total = 0;
+            foreach(DataSet dataset in _dataSets)
+            {
+                if (dataset._isEmpty)
+                    continue;
+                
+                if (dataset._properties._posture == posture)
+                    total += dataset._data.Count;
+            }
+            return total;
+        }
+
         public float GetPercentagesForPostures(Posture posture, int value)
         {
             float total = 0;
             int offset = 0;
-            
-            foreach(DataSet dataset in _dataSets)
+
+            foreach (DataSet dataset in _dataSets)
             {
-                if(dataset._isEmpty)
+                if (dataset._isEmpty)
                 {
                     offset++;
                     continue;
                 }
-                
+
                 if (posture != dataset._properties._posture)
                     continue;
 
                 total += dataset.GetInputOverValue(value);
             }
 
-            return total /= (float)(_dataSets.Count - offset);
+            float result = total / (float)(_dataSets.Count - offset);
+
+            //if (Posture.Supine == posture)
+            //{
+            //    Console.WriteLine("Height: " + _properties._height + ", % for Supine: " + result);
+            //    Console.WriteLine("Weight: " + _properties._weight + ", % for Supine: " + result);
+            //}
+
+            return result;
         }
 
-        public float GetAverageTopBottomRatioForInc(int inc, int value)
+        public float GetAverageTopBottomRatioForInc(int inc, int value, List<Posture> postures)
         {
             float total = 0;
             int offset = 0;
@@ -240,7 +295,16 @@ namespace DigHi2
                 }
 
                 if (inc != dataset._properties._bedInclination)
+                {
+                    offset++;
                     continue;
+                }
+
+                if (!postures.Contains(dataset._properties._posture))
+                {
+                    offset++;
+                    continue;
+                }
 
                 total += dataset.GetRatioOverValue(value);
             }
@@ -290,7 +354,7 @@ namespace DigHi2
     {
         public DataSetProperties _properties;
         
-        List<int[]> _data = new List<int[]>();
+        public List<int[]> _data = new List<int[]>();
         int _frameLength;
         public bool _isEmpty = false;
 
